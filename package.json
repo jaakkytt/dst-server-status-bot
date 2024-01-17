@@ -1,0 +1,46 @@
+{
+  "name": "dst-server-status-bot",
+  "version": "1.0.0",
+  "description": "A Discord bot that shows the current season and player count on a Don't Starve Together dedicated server",
+  "keywords": [
+    "don't starve together",
+    "dst",
+    "discord"
+  ],
+  "main": "src/app.ts",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/app.js",
+    "dev": "npx tsx src/app.ts",
+    "build": "tsc --build --clean && tsc",
+    "lint": "./node_modules/.bin/eslint ./src ./test --fix --ext .ts",
+    "test": "node --import tsx --test test/**.test.ts"
+  },
+  "author": {
+    "name": "Jaak Kütt",
+    "email": "jaak.kytt@gmail.com",
+    "url": "https://jaak.kytt.ee/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jaakkytt/dst-server-status-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jaakkytt/dst-server-status-bot/issues"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@logdna/tail-file": "^3.0.1",
+    "discord.js": "^14.13.0",
+    "dockerode": "^4.0.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/dockerode": "^3.3.23",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
+    "eslint": "^8.53.0",
+    "tsx": "^3.14.0",
+    "typescript": "^5.2.2"
+  }
+}

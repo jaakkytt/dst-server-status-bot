@@ -1,0 +1,28 @@
+services:
+  dst-server:
+    container_name: dst
+    image: jamesits/dst-server:latest
+    restart: on-failure:5
+    ports:
+      - "10999-11000:10999-11000/udp"
+      - "12346-12347:12346-12347/udp"
+    volumes:
+      - ./data:/data
+    stop_grace_period: 6m
+  dst-bot:
+    container_name: dst-bot
+    image: jaakkytt/dst-server-status-bot:latest
+    restart: on-failure:10
+    privileged: true
+    depends_on:
+      dst-server:
+        condition: service_healthy
+    volumes:
+      - ./data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DISCORD_TOKEN=
+      - LOG_FILE=/data/DoNotStarveTogether/Cluster_1/server_log.txt
+      - DST_CLUSTER_DIR=/data/DoNotStarveTogether/Cluster_1/
+      - DST_CONTAINER_NAME=dst
+      - UPDATE_FREQUENCY=30000
