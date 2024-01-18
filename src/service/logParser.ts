@@ -1,16 +1,30 @@
-import { Season, SeasonState, getSeasonFrom } from '../domain/season.js'
-import { Player, formatCharacterName } from '../domain/player.js'
+import { findSeason, Season, SeasonState } from '../domain/season.js'
+import { formatCharacterName, Player } from '../domain/player.js'
+import { findPhase, Phase } from '../domain/phase.js'
 
 interface LogEntry {
-	state: SeasonState
-	players: Player[]
+    state: SeasonState
+    phase: Phase
+    players: Player[]
 }
 
 export class InputEntry {
-    public static pattern = /^\[(\d{2}:\d{2}:\d{2})]:\sRemoteCommandInput: "c_dumpseasons\(\); c_listallplayers\(\)"$/
+    public static pattern = /^\[(\d{2}:\d{2}:\d{2})]:\sRemoteCommandInput: "c_dumpseasons\(\); print\("Current phase: " \.\. TheWorld\.components\.worldstate\.data\.phase\); c_listallplayers\(\)"$/
     public timestamp: string
+
     constructor(match: RegExpMatchArray) {
         this.timestamp = match[1]
+    }
+}
+
+export class PhaseEntry {
+    public static pattern = /^\[(\d{2}:\d{2}:\d{2})]:\sCurrent phase:\s(day|dusk|night)$/
+    public timestamp: string
+    public phase: Phase
+
+    constructor(match: RegExpMatchArray) {
+        this.timestamp = match[1]
+        this.phase = findPhase(match[2])
     }
 }
 
@@ -24,7 +38,7 @@ export class SeasonEntry implements SeasonState {
 
     constructor(match: RegExpMatchArray) {
         this.timestamp = match[1]
-        this.season = getSeasonFrom(match[3])
+        this.season = findSeason(match[3])
         this.currentDay = parseInt(match[4]) + 1
         this.totalDays = parseInt(match[4]) + parseInt(match[5])
         this.cyclePercentage = parseInt(match[6])
@@ -44,7 +58,14 @@ export class PlayerEntry implements Player {
     }
 }
 
-const combinedPattern = new RegExp(`(${InputEntry.pattern.source}|${SeasonEntry.pattern.source}|${PlayerEntry.pattern.source})`)
+const sources = [
+    InputEntry.pattern.source,
+    PhaseEntry.pattern.source,
+    SeasonEntry.pattern.source,
+    PlayerEntry.pattern.source
+]
+
+const combinedPattern = new RegExp(`(${sources.join('|')})`)
 
 export const logParser = {
     pattern: combinedPattern,
@@ -57,7 +78,7 @@ export const logParser = {
             .filter(x => x !== null)
             .pop()
 
-        if (!timestamp || logEntries.length < 2) {
+        if (!timestamp || logEntries.length < 3) {
             console.warn('Matched entries without input command:', logEntries)
             return null
         }
@@ -77,6 +98,19 @@ export const logParser = {
             return null
         }
 
+        const phase = logEntries
+            .map(entry => {
+                const match = entry.match(PhaseEntry.pattern)
+                return match ? new PhaseEntry(match).phase : null
+            })
+            .filter(x => x !== null)
+            .pop()
+
+        if (!phase) {
+            console.warn('Input command was executed but phase was not matched:', logEntries)
+            return null
+        }
+
         const players = logEntries
             .map(entry => {
                 const match = entry.match(PlayerEntry.pattern)
@@ -87,6 +121,7 @@ export const logParser = {
 
         return {
             state: season,
+            phase: phase,
             players: players,
         }
     },

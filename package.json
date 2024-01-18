@@ -1,6 +1,6 @@
 {
   "name": "dst-server-status-bot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A Discord bot that shows the current season and player count on a Don't Starve Together dedicated server",
   "keywords": [
     "don't starve together",

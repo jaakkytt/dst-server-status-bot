@@ -1,18 +1,18 @@
 # Don't Starve Together Server Status Bot
 
-A Discord bot that shows the current season and player count on a Don't Starve Together dedicated server.
+A Discord bot that shows the current season state and player count on a Don't Starve Together dedicated server.
 
 ## Features
 
 - The bot is `🟢Online` when there are players on the server and `🌙Idle` when there are none.
-- Bot activity status message displays the current season, current day in season and total days in the season.
+- Bot activity status message displays the current season, current day in season, day phase, and total days in the season.
 - When there are players online, the status message also includes the number of players. 
 
 Example status messages:
-  - `🍂Autumn day 7/20`
-  - `❄️Winter day 8/12 🧍2`
-  - `🌸Spring day 5/20 🧍3`
-  - `☀️Summer day 1/12`
+  - `🍂Autumn ☀️Day 7/20`
+  - `❄️Winter ☀️Day 8/12 🧍2`
+  - `🌸Spring 🌙Night 5/20 🧍3`
+  - `☀️Summer 🌄Dusk 1/12`
 
 ## Installation
 
@@ -39,8 +39,8 @@ Please note that the container leverages direct access to the DST server contain
 expecting to run with `priviliged=true` and have access to the host `/var/run/docker.sock` file. 
 
 The [script](./print.py) that is being executed inside the DST server container connects to the running game server
-process and sends the server console commands `c_dumpseasons(); c_listallplayers()` which dumps the season and player info
-into the game logs.
+process and sends the server console commands `c_dumpseasons(); print("Current phase: " .. TheWorld.components.worldstate.data.phase); c_listallplayers()`
+which dumps the current season, day phase, and player info into the game logs.
 
 ### Configuration
 

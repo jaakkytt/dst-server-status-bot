@@ -56,11 +56,13 @@ export class Docker implements Service {
                 exec.start({ stdin: true, Tty: true })
                     .then(async () => {
                         console.log(`Docker executed: "python ${this.commandTargetPath}"`)
-                    }).catch(reason => {
+                    })
+                    .catch(reason => {
                         console.warn(`Docker exec.start failed: ${reason}`)
                     })
                 return exec
-            }).catch(reason => {
+            })
+            .catch(reason => {
                 console.warn(`Docker exec failed: ${reason}`)
             })
     }

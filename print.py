@@ -3,7 +3,7 @@ import sys
 import time
 
 # DST game server console commands that dump additional info to server logs
-console_command = 'c_dumpseasons(); c_listallplayers()'
+console_command = 'c_dumpseasons(); print("Current phase: " .. TheWorld.components.worldstate.data.phase); c_listallplayers()'
 
 # Reference defined in https://github.com/Jamesits/docker-dst-server/
 process_reference = 'supervisorctl fg dst-server:dst-server-master'

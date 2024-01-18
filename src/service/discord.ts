@@ -1,4 +1,4 @@
-import { Client, Events, Partials, GatewayIntentBits } from 'discord.js'
+import { Client, Events, GatewayIntentBits, Partials } from 'discord.js'
 import { Presence } from './presence.js'
 import { Service } from './service.js'
 
@@ -24,26 +24,23 @@ export class Discord implements Service {
             return Promise.reject(new Error('Discord client is already initialized'))
         }
 
-        const loginPromise = this.client.login(this.token).then(() => {
-            if (!this.client.user) {
-                throw new Error('Unable to find bot user')
-            }
-            this.client.user.setStatus('idle')
-            this.client.user.setAFK(true)
-            this.initialized = true
-        }).then(() => {
-            return new Promise<void>((resolve, reject) => {
-                this.client.once(Events.ClientReady, async client => {
-                    try {
+        const loginPromise = this.client.login(this.token)
+            .then(() => {
+                if (!this.client.user) {
+                    throw new Error('Unable to find bot user')
+                }
+                this.client.user.setStatus('idle')
+                this.client.user.setAFK(true)
+            })
+            .then(() => {
+                return new Promise<void>((resolve) => {
+                    this.client.once(Events.ClientReady, async client => {
                         console.log(`Ready! Logged in as ${client.user.tag}`)
                         this.initialized = true
                         return resolve()
-                    } catch (error) {
-                        return reject(error)
-                    }
+                    })
                 })
             })
-        })
 
         const timeoutPromise = new Promise<void>((_resolve, reject) => {
             setTimeout(() => reject(new Error('Login timed out')), this.loginTimeout)

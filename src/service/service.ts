@@ -1,4 +1,4 @@
 export interface Service {
-	initialize(): Promise<void>
-	terminate(): Promise<void>
+    initialize(): Promise<void>
+    terminate(): Promise<void>
 }

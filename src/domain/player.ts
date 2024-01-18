@@ -1,6 +1,6 @@
 export interface Player {
-	username: string;
-	character: string;
+    username: string;
+    character: string;
 }
 
 export function formatCharacterName(name: string) {

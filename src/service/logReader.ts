@@ -2,7 +2,7 @@ import TailFile from '@logdna/tail-file'
 import { Service } from './service.js'
 
 interface LogCallback {
-	(entries: string[]): void;
+    (entries: string[]): void;
 }
 
 export class LogReader implements Service {

@@ -6,9 +6,12 @@ import { logParser } from './service/logParser.js'
 import { Service } from './service/service.js'
 
 import {
-    logFile, timestampPattern,
-    clusterDirectory, containerName,
-    discordToken, loginTimeout,
+    clusterDirectory,
+    containerName,
+    discordToken,
+    logFile,
+    loginTimeout,
+    timestampPattern,
     updateFrequency,
 } from './config.js'
 
@@ -17,8 +20,6 @@ const docker = new Docker(containerName, clusterDirectory)
 const discord = new Discord(discordToken, loginTimeout)
 
 const services: Service[] = [reader, docker, discord]
-
-// TODO: make sure the python script you are executing also exists!
 
 const main = async () => {
     for (const service of services) {
@@ -36,7 +37,7 @@ const main = async () => {
         const entry = logParser.parse(logOutput)
         if (entry) {
             const end = Date.now() + (updateFrequency * 2)
-            discord.setPresence(new Presence(entry.state, entry.players, ready, end))
+            discord.setPresence(new Presence(entry.state, entry.phase, entry.players, ready, end))
         }
     })
 }

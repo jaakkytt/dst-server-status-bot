@@ -1,19 +1,34 @@
 import { describe, it } from 'node:test'
 import * as assert from 'node:assert'
-import { logParser, InputEntry, SeasonEntry, PlayerEntry } from '../src/service/logParser.js'
+import { InputEntry, logParser, PhaseEntry, PlayerEntry, SeasonEntry } from '../src/service/logParser.js'
+import { Phase } from '../src/domain/phase.js'
+import { Season } from '../src/domain/season.js'
 
 const validCommandInputEntries = [
-    '[02:13:08]: RemoteCommandInput: "c_dumpseasons(); c_listallplayers()"',
-    '[07:01:00]: RemoteCommandInput: "c_dumpseasons(); c_listallplayers()"',
-    '[07:13:08]: RemoteCommandInput: "c_dumpseasons(); c_listallplayers()"',
-    '[18:54:51]: RemoteCommandInput: "c_dumpseasons(); c_listallplayers()"',
+    '[02:13:08]: RemoteCommandInput: "c_dumpseasons(); print("Current phase: " .. TheWorld.components.worldstate.data.phase); c_listallplayers()"',
+    '[07:01:00]: RemoteCommandInput: "c_dumpseasons(); print("Current phase: " .. TheWorld.components.worldstate.data.phase); c_listallplayers()"',
+    '[07:13:08]: RemoteCommandInput: "c_dumpseasons(); print("Current phase: " .. TheWorld.components.worldstate.data.phase); c_listallplayers()"',
 ]
 
 const invalidCommandInputEntries = [
+    '[18:54:51]: RemoteCommandInput: "c_dumpseasons(); c_listallplayers()"',
     '[02:     ]: RemoteCommandInput: "c_dumpseasons(); c_listallplayers()"',
     '[07:01:00]: RemoteCommandInput: "c_listallplayers()"',
     '[07:13:08]: "c_dumpseasons(); c_listallplayers()"',
     '[18:54:51]: RemoteCommandInput: "c_dumpseasons();"',
+]
+
+const validPhaseEntries = [
+    '[02:13:08]: Current phase: day',
+    '[07:01:00]: Current phase: dusk',
+    '[07:13:08]: Current phase: night',
+]
+
+const invalidPhaseEntries = [
+    '[02:13:08]: day',
+    '[07:01:00]: Current phase dusk',
+    '[07:13:08]: Current phase: midnight',
+    '[07:  :08]: Current phase: night',
 ]
 
 const validSeasonEntries = [
@@ -61,14 +76,22 @@ const invalidPlayerEntries = [
 describe('combined pattern', () => {
 
     it('matches valid input entries', async () => {
-        const validEntries = validCommandInputEntries.concat(validSeasonEntries).concat(validPlayerEntries)
+        const validEntries = validCommandInputEntries
+            .concat(validPhaseEntries)
+            .concat(validSeasonEntries)
+            .concat(validPlayerEntries)
+
         for (const entry of validEntries) {
             assert.strictEqual(logParser.pattern.test(entry), true, `should have matched: ${entry}`)
         }
     })
 
     it('does not match invalid input entries', async () => {
-        const invalidEntries = invalidCommandInputEntries.concat(invalidSeasonEntries).concat(invalidPlayerEntries)
+        const invalidEntries = invalidCommandInputEntries
+            .concat(invalidPhaseEntries)
+            .concat(invalidSeasonEntries)
+            .concat(invalidPlayerEntries)
+
         for (const entry of invalidEntries) {
             assert.strictEqual(logParser.pattern.test(entry), false, `should have not matched: ${entry}`)
         }
@@ -83,6 +106,15 @@ describe('individual pattern', () => {
         }
         for (const entry of invalidCommandInputEntries) {
             assert.strictEqual(InputEntry.pattern.test(entry), false, `should have not matched: ${entry}`)
+        }
+    })
+
+    it('matches valid phase entries', async () => {
+        for (const entry of validPhaseEntries) {
+            assert.strictEqual(PhaseEntry.pattern.test(entry), true, `should have matched: ${entry}`)
+        }
+        for (const entry of invalidPhaseEntries) {
+            assert.strictEqual(PhaseEntry.pattern.test(entry), false, `should have not matched: ${entry}`)
         }
     })
 
@@ -108,10 +140,10 @@ describe('individual pattern', () => {
 describe('input entry', () => {
     it('extracts timestamp', async () => {
         const given = [
-            '[02:13:08]: RemoteCommandInput: "c_dumpseasons(); c_listallplayers()"',
-            '[07:01:00]: RemoteCommandInput: "c_dumpseasons(); c_listallplayers()"',
-            '[07:13:08]: RemoteCommandInput: "c_dumpseasons(); c_listallplayers()"',
-            '[18:54:51]: RemoteCommandInput: "c_dumpseasons(); c_listallplayers()"',
+            '[02:13:08]: RemoteCommandInput: "c_dumpseasons(); print("Current phase: " .. TheWorld.components.worldstate.data.phase); c_listallplayers()"',
+            '[07:01:00]: RemoteCommandInput: "c_dumpseasons(); print("Current phase: " .. TheWorld.components.worldstate.data.phase); c_listallplayers()"',
+            '[07:13:08]: RemoteCommandInput: "c_dumpseasons(); print("Current phase: " .. TheWorld.components.worldstate.data.phase); c_listallplayers()"',
+            '[18:54:51]: RemoteCommandInput: "c_dumpseasons(); print("Current phase: " .. TheWorld.components.worldstate.data.phase); c_listallplayers()"',
         ]
 
         const expected = [
@@ -129,6 +161,28 @@ describe('input entry', () => {
     })
 })
 
+describe('phase entry', () => {
+    it('extracts phase name', async () => {
+        const given = [
+            '[02:13:08]: Current phase: day',
+            '[07:01:00]: Current phase: dusk',
+            '[07:13:08]: Current phase: night',
+        ]
+
+        const expected = [
+            Phase.Day,
+            Phase.Dusk,
+            Phase.Night,
+        ]
+
+        for (let i = 0; i < given.length; i++) {
+            const match = given[i].match(PhaseEntry.pattern) ?? assert.fail(`PhaseEntry did not match ${given[i]}`)
+            const actual = new PhaseEntry(match).phase
+            assert.strictEqual(actual, expected[i])
+        }
+    })
+})
+
 describe('season entry', () => {
     it('extracts month', async () => {
         const given = [
@@ -139,15 +193,15 @@ describe('season entry', () => {
         ]
 
         const expected = [
-            'Autumn',
-            'Winter',
-            'Spring',
-            'Summer',
+            Season.Autumn,
+            Season.Winter,
+            Season.Spring,
+            Season.Summer,
         ]
 
         for (let i = 0; i < given.length; i++) {
             const match = given[i].match(SeasonEntry.pattern) ?? assert.fail(`SeasonEntry did not match ${given[i]}`)
-            const actual = new SeasonEntry(match).season.name
+            const actual = new SeasonEntry(match).season
             assert.strictEqual(actual, expected[i])
         }
     })
@@ -250,8 +304,9 @@ describe('parse', () => {
     it('includes players', async () => {
         const given = [
             '[22:20:39]: [Leave Announcement] player-name',
-            '[22:20:39]: RemoteCommandInput: "c_dumpseasons(); c_listallplayers()"',
+            '[22:20:39]: RemoteCommandInput: "c_dumpseasons(); print("Current phase: " .. TheWorld.components.worldstate.data.phase); c_listallplayers()"',
             '[22:20:39]: spring 3 -> 17 days (15 %) cycle',
+            '[22:20:39]: Current phase: dusk',
             '[22:20:39]: [1] (KU_4DmXZhvB) player-name <wilson>',
             '[22:20:39]: Serializing user: session/B7A672E4489A411D/A7GGRGGOTFIB/0000000042',
             '[22:20:39]: [2] (KU_443XZhvB) second-player <maxwell>',
@@ -260,9 +315,10 @@ describe('parse', () => {
 
         const actual = logParser.parse(given) ?? assert.fail('parse have been able to parse entry')
 
-        assert.strictEqual(actual.state.season.name, 'Spring')
+        assert.strictEqual(actual.state.season, Season.Spring)
         assert.strictEqual(actual.state.currentDay, 4)
         assert.strictEqual(actual.state.totalDays, 20)
+        assert.strictEqual(actual.phase, Phase.Dusk)
         assert.strictEqual(actual.players.length, 2)
         assert.strictEqual(actual.players[0].username, 'player-name')
         assert.strictEqual(actual.players[0].character, 'Wilson')

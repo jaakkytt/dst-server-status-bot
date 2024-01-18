@@ -7,7 +7,8 @@ import { PathLike } from 'fs'
 import * as assert from 'node:assert'
 import { LogReader } from '../src/service/logReader.js'
 
-import { timestampPattern, timeout } from './config.js'
+import { timeout, timestampPattern } from './config.js'
+
 let reader: LogReader
 
 describe('on data', { skip: !timestampPattern, timeout: timeout }, () => {
@@ -20,11 +21,11 @@ describe('on data', { skip: !timestampPattern, timeout: timeout }, () => {
 
     it('should split data if multiple entries are found', async () => {
         const message =
-			`will ignore this line${EOL}` +
-			`[21:49:22]: [Server thread/INFO]: will match${EOL}` +
-			` and ignore this${EOL}` +
-			`[21:49:22]: [ will match again${EOL}` +
-			` [21:49:22]: [Server thread/INFO]: but ignore this${EOL}`
+            `will ignore this line${EOL}` +
+            `[21:49:22]: [Server thread/INFO]: will match${EOL}` +
+            ` and ignore this${EOL}` +
+            `[21:49:22]: [ will match again${EOL}` +
+            ` [21:49:22]: [Server thread/INFO]: but ignore this${EOL}`
         let actual: string[] = []
 
         reader.register('.', (logOutput) => {
