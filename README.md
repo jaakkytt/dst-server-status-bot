@@ -62,7 +62,7 @@ which dumps the current season, day phase, and player info into the game logs.
 
 ## Contribution
 
-1. Start by creating an issue https://github.com/jaakkytt/dst-server-status-bot/issue.
+1. Start by creating an issue https://github.com/jaakkytt/dst-server-status-bot/issues.
 2. Fork and modify.
 3. Add/update tests (sufficiently, a subjective measure).
 4. Make sure tests pass (`npm run test`).
